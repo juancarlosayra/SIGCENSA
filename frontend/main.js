@@ -14,12 +14,12 @@ async function login() {
   const data = await res.json();
 
   if (!res.ok) {
-    alert('Error al iniciar sesión');
+    alert('Error starting session');
     return;
   }
 
   token = data.token;
-  user = parseJwt(token).nombre;
+  user = parseJwt(token).name;
 
   document.getElementById('login-section').style.display = 'none';
   document.getElementById('main-section').style.display = 'block';
@@ -37,25 +37,25 @@ function parseJwt(token) {
 }
 
 async function getWorker() {
-  const id = document.getElementById('trabajador-id').value;
+  const id = document.getElementById('worker-id').value;
 
-  const res = await fetch(`/api/trabajadores/${id}`);
+  const res = await fetch(`/api/workers/${id}`);
   const data = await res.json();
 
   if (!res.ok) {
-    alert('No se encontró el trabajador');
+    alert('Worker not found');
     return;
   }
 
-  document.getElementById('trabajador-info').textContent = JSON.stringify(data, null, 2);
+  document.getElementById('worker-info').textContent = JSON.stringify(data, null, 2);
 }
 
-async function crearProyecto() {
-  const workerId = document.getElementById('proyecto-trabajadorId').value;
-  const name = document.getElementById('proyecto-nombre').value;
-  const description = document.getElementById('proyecto-descripcion').value;
+async function createProject() {
+  const workerId = document.getElementById('project-workerId').value;
+  const name = document.getElementById('project-name').value;
+  const description = document.getElementById('project-description').value;
 
-  const res = await fetch('/api/proyectos/', {
+  const res = await fetch('/api/projects/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -67,9 +67,9 @@ async function crearProyecto() {
   const data = await res.json();
 
   if (!res.ok) {
-    alert('Error al crear proyecto');
+    alert('Error creating project');
     return;
   }
 
-  alert('✅ Proyecto creado');
+  alert('✅ Project created');
 }
