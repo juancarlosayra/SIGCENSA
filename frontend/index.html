@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Proyecto Integrado</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <h1>🚀 Sistema de Proyectos</h1>
+
+    <!-- Login -->
+    <section id="login-section">
+      <h2>Iniciar Sesión</h2>
+      <input type="text" id="username" placeholder="User" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="login()">Iniciar Sesión</button>
+    </section>
+
+    <!-- Panel Principal -->
+    <section id="main-section" style="display:none;">
+      <h2>👋 Bienvenido, <span id="user-name"></span></h2>
+
+      <!-- Obtener Trabajador -->
+      <h3>🔍 Buscar Trabajador</h3>
+      <input type="text" id="trabajador-id" placeholder="ID del Trabajador" />
+      <button onclick="getWorker()">Buscar</button>
+      <pre id="trabajador-info"></pre>
+
+      <!-- Crear Proyecto -->
+      <h3>📌 Nuevo Proyecto</h3>
+      <input type="text" id="proyecto-trabajadorId" placeholder="ID del Trabajador" />
+      <input type="text" id="proyecto-nombre" placeholder="Nombre del Proyecto" />
+      <input type="text" id="proyecto-descripcion" placeholder="Descripción" />
+      <button onclick="createProject()">Crear Proyecto</button>
+    </section>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
