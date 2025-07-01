@@ -2,13 +2,13 @@ let token = '';
 let user = '';
 
 async function login() {
-  const user = document.getElementById('username').value;
-  const pass = document.getElementById('password').value;
+  const user = document.getElementById('user').value;
+  const pass = document.getElementById('pass').value;
 
   const res = await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user: user, password: pass })
+    body: JSON.stringify({ user: user, pass: pass })
   });
 
   const data = await res.json();
@@ -36,6 +36,20 @@ function parseJwt(token) {
   return JSON.parse(jsonPayload);
 }
 
+// async function getWorker() {
+//   const id = document.getElementById('worker-id').value;
+
+//   const res = await fetch(`/api/workers/${id}`);
+//   const data = await res.json();
+
+//   if (!res.ok) {
+//     alert('Worker not found');
+//     return;
+//   }
+
+//   document.getElementById('worker-info').textContent = JSON.stringify(data, null, 2);
+// }
+
 async function getWorker() {
   const id = document.getElementById('worker-id').value;
 
@@ -43,7 +57,11 @@ async function getWorker() {
   const data = await res.json();
 
   if (!res.ok) {
-    alert('Worker not found');
+    if (res.status === 503) {
+      alert('⚠️ MS SQL is not available. Some functions are not available.');
+    } else {
+      alert('❌ Worker not found');
+    }
     return;
   }
 

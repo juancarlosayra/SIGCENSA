@@ -6,6 +6,7 @@ const { connectMSSQL } = require('./config/dbMSSQL');
 const authRoutes = require('./routes/authRoutes');
 const workerRoutes = require('./routes/workerRoutes');
 const projectRoutes = require('./routes/projectRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 dotenv.config();
 
@@ -18,13 +19,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Start connections
-connectMSSQL(); // Connect to MS SQL
+//connectMSSQL(); // Connect to MS SQL
 require('./config/dbMongo')(); // Connect to MongoDB
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/worker', workerRoutes);
 app.use('/api/project', projectRoutes);
+app.use('/api/user', userRoutes);
 
 // Start server
 mongoose.connection.on('connected', () => {
