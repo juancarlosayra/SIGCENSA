@@ -5,12 +5,12 @@ const createUser = async (req, res) => {
   const { name, pass } = req.body;
 
   try {
-    // Validación básica
+    // Basic Validation
     if (!name || !pass) {
       return res.status(400).json({ message: 'Nombre y contraseña son obligatorios' });
     }
 
-    // Verificar si el usuario ya existe
+    // Check if exist
     const existingUser = await User.findOne({ name });
 
     if (existingUser) {
