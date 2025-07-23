@@ -1,31 +1,97 @@
 const Project = require('../models/Project');
-const { pool } = require('../config/dbMSSQL');
 
-const createProject = async (req, res) => {
-  const { workerId, name, description } = req.body;
-
+/**
+ * Controlador para crear un nuevo proyecto
+ * 
+ * ✅ El worker ya fue validado por validateWorkerExists
+ * ✅ Los objetivos ya fueron validados por validatePriorityObjectives
+ * ✅ El controlador solo se enfoca en crear y guardar
+ */
+exports.createProject = async (req, res) => {
   try {
-    const result = await pool.request()
-      .input('id', sql.VarChar, workerId)
-      .query('SELECT name FROM workers WHERE id = @id');
+    // Extraemos datos del body
+    const {
+      program_code,
+      program_name,
+      project_code,
+      project_name,
+      project_classification,
+      fields_of_knowledge,
+      priority,
+      priority_objectives,
+      principal_entity,
+      project_chief,
+      added_entities,
+      added_entity_director,
+      added_entity_direction,
+      added_entity_province,
+      added_entity_phone,
+      added_entity_email,
+      project_start,
+      project_end,
+      funding,
+      project_resume,
+      key_words,
+      problem_to_solve
+    } = req.body;
 
-    if (result.recordset.length === 0) {
-      return res.status(404).json({ message: 'Worker not found' });
-    }
+    // ✅ El middleware validateWorkerExists ya verificó al worker y adjuntó req.worker
+    const { workerId, name: workerName } = req.worker;
 
+    // Creamos el nuevo proyecto
     const newProject = new Project({
-      name,
-      description,
-      workerId,
-      workerName: result.recordset[0].name
+      program_code,
+      program_name,
+      project_code,
+      project_name,
+      project_classification,
+      fields_of_knowledge,
+      priority,
+      priority_objectives,
+      principal_entity,
+      project_chief,
+      added_entities,
+      added_entity_director,
+      added_entity_direction,
+      added_entity_province,
+      added_entity_phone,
+      added_entity_email,
+      project_start,
+      project_end,
+      funding,
+      project_resume,
+      key_words,
+      problem_to_solve,
+      worker_id: workerId,
+      worker_name: workerName
     });
 
+    // Guardamos en MongoDB
     await newProject.save();
-    res.status(201).json(newProject);
+
+    // Respuesta exitosa
+    res.status(201).json({
+      message: 'Proyecto creado exitosamente',
+      project: newProject
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error creating a new Project' });
+    console.error('Error al guardar el proyecto:', error);
+
+    // Manejo de errores de validación de Mongoose
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        message: 'Datos inválidos',
+        errors: Object.keys(error.errors).reduce((acc, key) => {
+          acc[key] = error.errors[key].message;
+          return acc;
+        }, {})
+      });
+    }
+
+    // Error genérico del servidor
+    res.status(500).json({
+      message: 'Error interno del servidor al crear el proyecto'
+    });
   }
 };
-
-module.exports = { createProject };

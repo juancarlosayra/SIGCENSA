@@ -12,10 +12,15 @@ const projectSchema = new mongoose.Schema({
     ref: 'knowledgeField',
     required: true,
   }],
-  priority:{type: String, required: true},//check with queen ai ->
-  priority_objectives: {type: Text, required: true},//how to make this the same field
+  priority:{type: String, required: true, enum:['Nacional','Sectorial','Institucional']},
+  priority_objectives: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PriorityObjective',
+    required: true
+  }],
   principal_entity: {type: String, required: true},
-  project_chief: { type: String, required: true },
+  worker_id: { type: String, required: true },
+  worker_name: {type: String, required: true},
 
   added_entities: {type: String},
   added_entity_director: {type: String},
@@ -27,12 +32,28 @@ const projectSchema = new mongoose.Schema({
   project_start: {type: Date},
   project_end: {type: Date},
 
-  total_investment_cup: {type: Number, required: true},
-  total_investment_mlc: {type: Number},
-  financial_font_mlc: {type: String},
-  mlc_inverter: {type: String},
-  mlc_amount: {type: Number},
-  mlc_type: {type: String},
+  funding: [{
+    currency: {
+      type: String,
+      required: true,
+      enum: ['CUP', 'USD'] // Puedes agregar más: EUR, MLC, etc.
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    source: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    financier: {
+      type: String,
+      required: true,
+      trim: true
+    }
+  }],
 
   project_resume: {type: Text, required: true},
   key_words: {type: Text},
@@ -41,5 +62,12 @@ const projectSchema = new mongoose.Schema({
   
   created_at: { type: Date, default: Date.now }
 });
+
+projectSchema.path('funding').validate(function (funding) {
+  const currencies = funding.map(f => f.currency);
+  const unique = new Set(currencies).size === currencies.length;
+  return unique; // No se puede repetir la misma moneda
+}, 'No se puede registrar el mismo tipo de moneda más de una vez.');
+
 
 module.exports = mongoose.model('Project', projectSchema);
