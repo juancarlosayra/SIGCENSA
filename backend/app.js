@@ -7,11 +7,18 @@ const authRoutes = require('./routes/authRoutes');
 const workerRoutes = require('./routes/workerRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const userRoutes = require('./routes/userRoutes');
+const cors = require('cors');
+
 
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(cors({
+  origin: 'http://localhost:5173', // URL de tu frontend (Vite)
+  credentials: true
+}));
 
 // Middlewares
 app.use(express.json());

@@ -1,29 +1,6 @@
-// const { pool } = require('../config/dbMSSQL');
-
-// const getWorkerById = async (req, res) => {
-//   const { id } = req.params;
-
-//   try {
-//     const result = await pool.request()
-//       .input('id', sql.VarChar, id)
-//       .query('SELECT * FROM workers WHERE id = @id');
-
-//     if (result.recordset.length === 0) {
-//       return res.status(404).json({ message: 'Worker not found' });
-//     }
-
-//     res.json(result.recordset[0]);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Error getting worker' });
-//   }
-// };
-
-// module.exports = { getWorkerById };
-
 const { getMSSQLPool } = require('../config/dbMSSQL');
 
-const getWorkerById = async (req, res) => {
+exports.getWorkerById = async (req, res) => {
   const { id } = req.params;
 
   const pool = getMSSQLPool();
@@ -35,17 +12,39 @@ const getWorkerById = async (req, res) => {
   try {
     const result = await pool.request()
       .input('id', id)
-      .query('SELECT * FROM workers WHERE id = @id');
+      .query('SELECT * FROM RH_CENSA_2013 WHERE id = @id');
 
     if (result.recordset.length === 0) {
       return res.status(404).json({ message: 'Worker not found' });
     }
 
-    res.json(result.recordset[0]);
+    res.json({name: result.recordset[0].name});
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error getting worker' });
   }
 };
 
-module.exports = { getWorkerById };
+
+exports.getAllWorkers = async (req, res) => {
+  const pool = getMSSQLPool();
+
+  if (!pool) {
+    return res.status(404).json({ message: 'MS SQL is not available' });
+  }
+
+  try {
+    const result = await pool.request().query('SELECT * FROM RH_CENSA_2013');
+
+    if(result.recordset.length === 0){
+      return res.status(404).json({message: 'Workers not found'});
+    }
+
+    res.json(result.recordset)
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({message: 'Error getting workers'});
+  }
+}

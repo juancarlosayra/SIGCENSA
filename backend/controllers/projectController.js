@@ -95,3 +95,23 @@ exports.createProject = async (req, res) => {
     });
   }
 };
+
+exports.updateProject = async (req, res) => {
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!project) return res.status(404).json({message: "Project not found"})
+    res.status(201).json({
+      message: "Project updated successfully",
+      data: project
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: "Project not found",
+      error: error.message
+    });
+  }
+};

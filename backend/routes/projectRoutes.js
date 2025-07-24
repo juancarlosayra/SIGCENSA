@@ -10,7 +10,8 @@ const router = express.Router();
 // router.post('/', authJwt, createProject);
 
 router.route("/", validatePriorityObjectives, validateWorkerExists)
-.post(projectController.createProject);
+.post(projectController.createProject)
+.put(projectController.updateProject);
 
 module.exports = router;
 
