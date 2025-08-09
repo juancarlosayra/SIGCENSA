@@ -36,7 +36,8 @@ exports.createProject = async (req, res) => {
     } = req.body;
 
     // ✅ El middleware validateWorkerExists ya verificó al worker y adjuntó req.worker
-    const { workerId, name: workerName } = req.worker;
+    const workerId = req.body.workerId;
+    const workerName = req.worker.name;
 
     // Creamos el nuevo proyecto
     const newProject = new Project({
@@ -76,7 +77,12 @@ exports.createProject = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error al guardar el proyecto:', error);
+    console.error('❌ Error detallado:', {
+    message: error.message,
+    name: error.name,
+    stack: error.stack,
+    body: req.body  // Para ver qué datos llegaron
+  });
 
     // Manejo de errores de validación de Mongoose
     if (error.name === 'ValidationError') {
@@ -91,7 +97,8 @@ exports.createProject = async (req, res) => {
 
     // Error genérico del servidor
     res.status(500).json({
-      message: 'Error interno del servidor al crear el proyecto'
+      message: 'Error interno del servidor al crear el proyecto',
+      error: error.message
     });
   }
 };

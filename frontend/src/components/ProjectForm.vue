@@ -8,32 +8,40 @@
     </div>
 
     <form @submit.prevent="submitForm" class="space-y-6">
-
       <!-- Información del trabajador -->
       <div class="bg-gray-50 p-4 rounded-lg">
         <h2 class="text-lg font-semibold mb-3">Responsable del Proyecto</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">Worker ID *</label>
+            <label class="block text-sm font-medium text-gray-700">Buscar trabajador por nombre</label>
             <input
-              v-model="form.workerId"
-              @blur="searchWorker"
+              v-model="searchQuery"
+              @input="searchWorkers"
+              placeholder="Ej: Juan Pérez"
               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Ej: W001"
-              required
             />
-            <p v-if="workerLoading" class="text-xs text-blue-500 mt-1">Buscando...</p>
-            <p v-else-if="workerName" class="text-sm text-green-600 mt-1">✅ {{ workerName }}</p>
-            <p v-else-if="workerError" class="text-sm text-red-500 mt-1">❌ {{ workerError }}</p>
+
+            <!-- Resultados -->
+            <ul v-if="workers.length > 0" class="border border-gray-300 rounded-md mt-2 max-h-40 overflow-y-auto bg-white">
+              <li
+                v-for="worker in workers"
+                :key="worker.id"
+                @click="selectWorker(worker)"
+                class="p-2 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
+              >
+                {{ worker.name }} <span class="text-xs text-gray-500">({{ worker.id }})</span>
+              </li>
+            </ul>
+
+            <p v-if="searchQuery && workers.length === 0 && !searchLoading" class="text-sm text-gray-500 mt-2">
+              No se encontraron trabajadores.
+            </p>
+            <p v-if="searchLoading" class="text-sm text-blue-600 mt-2">Buscando...</p>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Nombre del Responsable</label>
-            <input
-              :value="workerName"
-              disabled
-              class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md py-2 px-3 text-gray-500"
-            />
+          <!-- Mostrar seleccionado -->
+          <div v-if="selectedWorker" class="mt-3 p-3 bg-green-50 border border-green-200 rounded text-sm">
+            <strong>Seleccionado:</strong> {{ selectedWorker.name }} (ID: {{ selectedWorker.id }})
           </div>
         </div>
       </div>
@@ -92,10 +100,21 @@
       <!-- Campos de conocimiento -->
       <div class="bg-gray-50 p-4 rounded-lg">
         <h2 class="text-lg font-semibold mb-3">Campos de Conocimiento</h2>
-        <p class="text-sm text-gray-600 mb-2">Selecciona uno o más campos (jerárquicos)</p>
-        <select v-model="form.fields_of_knowledge" multiple class="w-full border border-gray-300 rounded-md p-2 h-24">
-          <option v-for="field in knowledgeFields" :key="field._id" :value="field._id">{{ field.name }}</option>
+        <p class="text-sm text-gray-600 mb-2">Selecciona uno o más campos</p>
+
+        <div v-if="loadingKnowledge" class="text-sm text-blue-600 mb-2">
+          🔍 Cargando campos de conocimiento...
+        </div>
+
+        <select v-else v-model="form.fields_of_knowledge" multiple class="w-full border border-gray-300 rounded-md p-2 h-24">
+          <option v-for="field in knowledgeFields" :key="field._id" :value="field.path">
+            {{ field.name }}
+          </option>
         </select>
+
+        <p v-if="!loadingKnowledge && knowledgeFields.length === 0" class="text-sm text-red-600 mt-2">
+          ⚠️ No hay campos de conocimiento disponibles.
+        </p>
       </div>
 
       <!-- Financiamiento -->
@@ -159,12 +178,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import api from '../services/api';
 
-// Formulario
+// --- Formulario ---
 const form = ref({
-  workerId: '',
+  worker_id: '',
   project_code: '',
   project_name: '',
   project_classification: '',
@@ -181,61 +200,84 @@ const form = ref({
   key_words: ''
 });
 
-// Estados
+// --- Estados ---
 const loading = ref(false);
 const message = ref('');
 const success = ref(false);
 
-// Trabajador
-const workerName = ref('');
-const workerLoading = ref(false);
-const workerError = ref('');
+// --- Búsqueda de trabajador ---
+const searchQuery = ref('');
+const workers = ref([]);
+const searchLoading = ref(false);
+const selectedWorker = ref(null);
 
-// Objetivos
+const searchWorkers = async () => {
+  if (searchQuery.value.length < 2) {
+    workers.value = [];
+    return;
+  }
+
+  searchLoading.value = true;
+  try {
+    const res = await api.get('/api/workers/search', {
+      params: { q: searchQuery.value }
+    });
+    workers.value = res.data;
+  } catch (err) {
+    console.error('Error buscando trabajadores:', err);
+    workers.value = [];
+  } finally {
+    searchLoading.value = false;
+  }
+};
+
+const selectWorker = (worker) => {
+  selectedWorker.value = worker;
+  form.value.worker_id = worker.id;
+  workers.value = [];
+  searchQuery.value = worker.name;
+};
+
+// --- Objetivos por prioridad ---
 const loadingObjectives = ref(false);
 const objectives = ref([]);
 const priorities = ['Nacional', 'Sectorial', 'Institucional'];
 
-// Campos de conocimiento (ejemplo, cargar desde API)
-const knowledgeFields = ref([
-  { _id: '1', name: 'Matemáticas' },
-  { _id: '2', name: 'Física' },
-  { _id: '3', name: 'Ingeniería de Software' }
-]);
-
-// Buscar trabajador
-const searchWorker = async () => {
-  if (!form.value.workerId) return;
-  workerLoading.value = true;
-  workerName.value = '';
-  workerError.value = '';
-
-  try {
-    const res = await api.get(`/workers/${form.value.workerId}`);
-    workerName.value = res.data.name;
-  } catch (err) {
-    workerError.value = 'No encontrado';
-  } finally {
-    workerLoading.value = false;
-  }
-};
-
-// Cargar objetivos por prioridad
 const loadObjectives = async () => {
   if (!form.value.priority) return;
+
   loadingObjectives.value = true;
   try {
-    const res = await api.get(`/objectives/${form.value.priority}`);
+    const res = await api.get(`/api/objectives/${form.value.priority}`);
     objectives.value = res.data;
   } catch (err) {
+    console.error('Error cargando objetivos:', err);
     objectives.value = [];
-    console.error(err);
   } finally {
     loadingObjectives.value = false;
   }
 };
 
-// Financiamiento
+// --- Campos de conocimiento (desde API) ---
+const knowledgeFields = ref([]);
+const loadingKnowledge = ref(false);
+
+const loadKnowledgeFields = async () => {
+  loadingKnowledge.value = true;
+  try {
+    const res = await api.get('/api/knowledge-fields');
+    knowledgeFields.value = res.data;
+  } catch (err) {
+    console.error('Error cargando campos de conocimiento:', err);
+  } finally {
+    loadingKnowledge.value = false;
+  }
+};
+
+// Cargar al iniciar
+loadKnowledgeFields();
+
+// --- Financiamiento ---
 const addFunding = () => {
   form.value.funding.push({ currency: 'CUP', amount: 0, source: '', financier: '' });
 };
@@ -246,18 +288,19 @@ const removeFunding = (index) => {
   }
 };
 
-// Enviar formulario
+// --- Envío del formulario ---
 const submitForm = async () => {
   loading.value = true;
   message.value = '';
   try {
     const payload = { ...form.value };
-    const res = await api.post('/projects', payload);
+    const res = await api.post('/api/projects', payload);
     success.value = true;
     message.value = '✅ Proyecto creado exitosamente';
+
     // Reiniciar formulario
-    form.value = {
-      workerId: '',
+    Object.assign(form.value, {
+      worker_id: '',
       project_code: '',
       project_name: '',
       project_classification: '',
@@ -272,8 +315,10 @@ const submitForm = async () => {
       project_resume: '',
       problem_to_solve: '',
       key_words: ''
-    };
-    workerName.value = '';
+    });
+    selectedWorker.value = null;
+    searchQuery.value = '';
+    objectives.value = [];
   } catch (err) {
     success.value = false;
     message.value = err.response?.data?.message || '❌ Error al crear el proyecto';

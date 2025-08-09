@@ -1,8 +1,14 @@
 const express = require('express');
-const { getWorkerById } = require('../controllers/workerController');
+const workerController = require('../controllers/workerController');
 
 const router = express.Router();
 
-router.get('/:id', getWorkerById);
+console.log('workerController:', Object.keys(workerController));
+
+// Rutas
+router.get('/', workerController.getAllWorkers);
+router.get('/search', workerController.searchWorkers);
+
+console.log('✅ workerRoutes cargado correctamente');
 
 module.exports = router;

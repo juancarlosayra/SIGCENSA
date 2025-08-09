@@ -55,9 +55,9 @@ const projectSchema = new mongoose.Schema({
     }
   }],
 
-  project_resume: {type: Text, required: true},
-  key_words: {type: Text},
-  problem_to_solve: {type: Text, required: true},
+  project_resume: {type: String, required: true},
+  key_words: {type: String},
+  problem_to_solve: {type: String, required: true},
 
   
   created_at: { type: Date, default: Date.now }
